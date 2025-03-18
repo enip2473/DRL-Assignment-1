@@ -45,10 +45,18 @@ def get_action(obs):
 
     if (rel_x, rel_y) == (0, 0) and not state.has_passenger and passenger_look == True:
         state.set_passenger(True)
+        target = state.current_target
+        next_target = [i for i in range(4) if i != target]
+        state.set_target(random.choice(next_target))
+  
         return 4
 
     if (rel_x, rel_y) == (0, 0) and state.has_passenger and destination_look == True:
         state.set_passenger(False)
+        target = state.current_target
+        next_target = [i for i in range(4) if i != target]
+        state.set_target(random.choice(next_target))
+
         return 5
     
     prob = softmax(policy_table[table_state])
