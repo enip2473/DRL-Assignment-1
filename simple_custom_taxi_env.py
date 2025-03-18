@@ -219,9 +219,9 @@ class TaxiEnv(SimpleTaxiEnv):
             oy, ox = obstacle
             grid[oy][ox] = '⛰️'
 
-        for station in self.stations:
+        for i, station in enumerate(self.stations):
             sy, sx = station
-            grid[sy][sx] = 'T'
+            grid[sy][sx] = f'{i}'
 
         py, px = self.passenger_loc
         if 0 <= px < self.grid_size and 0 <= py < self.grid_size:

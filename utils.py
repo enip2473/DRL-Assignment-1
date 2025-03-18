@@ -1,19 +1,42 @@
 import numpy as np
+import random
 
 class State:
     def __init__(self):
         self.current_target = 0
-        self.has_passenger = False
+        self.current_phase = 0
+        self.not_passenger = []
+        self.not_target = []
     
-    def set_target(self, target):
-        self.current_target = target
+    def __str__(self):
+        return f"Current target: {self.current_target}, Current phase: {self.current_phase}, Not passenger: {self.not_passenger}, Not target: {self.not_target}"
     
-    def set_passenger(self, passenger):
-        self.has_passenger = passenger
+    def set_new_target(self):
+        if self.current_phase == 0:
+            possible_target = [i for i in range(4) if i not in self.not_passenger]
+        elif self.current_phase == 1:
+            possible_target = [i for i in range(4) if i not in self.not_target]
+        if not possible_target:
+            print("Error! Restarting...")
+            self.reset()
+            possible_target = [i for i in range(4)]
+        self.current_target = random.choice(possible_target)
+    
+    def add_not_passenger(self, index):
+        if index not in self.not_passenger:
+            self.not_passenger.append(index)
+
+    def add_not_target(self, index):
+        if index not in self.not_target:
+            self.not_target.append(index)
 
     def reset(self):
         self.current_target = 0
-        self.has_passenger = False
+        self.current_phase = 0
+        self.not_passenger = []
+        self.not_target = []
+
+
 
 def get_state(obs, state):
     loc = [[0, 0] for i in range(4)]
@@ -33,3 +56,5 @@ def softmax(x):
     y = x - np.max(x)
     return np.exp(y) / np.sum(np.exp(y), axis=0)
 
+def distance(x, y):
+    return abs(x[0] - y[0]) + abs(x[1] - y[1])

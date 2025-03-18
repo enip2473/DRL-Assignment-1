@@ -1,44 +1,62 @@
 import numpy as np
 import pickle
 import random
-from utils import State, get_state, convert_to_table_state, softmax
+from utils import State, get_state, convert_to_table_state, softmax, distance
 
 state = State()
+state.reset()
 
 policy_table = pickle.load(open("policy_table.pkl", "rb"))
-
+print("Policy table loaded!", policy_table)
 
 def get_action(obs):
+    loc = [[0, 0] for i in range(4)]
+    taxi_row, taxi_col, loc[0][0], loc[0][1], loc[1][0], loc[1][1], loc[2][0], loc[2][1], loc[3][0], loc[3][1], obstacle_north, obstacle_south, obstacle_east, obstacle_west, passenger_look, destination_look = obs
+    print(state)
+
     current_state = get_state(obs, state)
     rel_x, rel_y, obstacle_north, obstacle_south, obstacle_east, obstacle_west, passenger_look, destination_look = current_state
     
+    if state.current_phase == 1 and passenger_look == False: # Wrongly picked up passenger
+        state.current_phase = 0
+        state.set_new_target()
+        current_state = get_state(obs, state)
+        rel_x, rel_y, obstacle_north, obstacle_south, obstacle_east, obstacle_west, passenger_look, destination_look = current_state
+
+    if (rel_x, rel_y) == (0, 0) and state.current_phase == 0 and passenger_look == True:
+        state.current_phase = 1
+        state.not_passenger = [state.current_target]
+        state.not_target.append(state.current_target)
+        state.set_new_target()
+        return 4
+    
+    if (rel_x, rel_y) == (0, 0) and state.current_phase == 1 and destination_look == True:
+        state.current_phase = 0
+        state.not_passenger = []
+        state.not_target = []
+        state.set_new_target()
+        return 5
+
+    for i in range(4):
+        if distance((taxi_row, taxi_col), loc[i]) <= 1:
+            if not passenger_look:
+                state.add_not_passenger(i)
+            if not destination_look:
+                state.add_not_target(i)
+        
+    if (rel_x, rel_y) == (0, 0):
+        state.set_new_target()
+    
+    current_state = get_state(obs, state)
     table_state = convert_to_table_state(current_state)
 
-    if passenger_look == 0:
-        state.set_passenger(False)
-
-    if (rel_x, rel_y) == (0, 0) and not state.has_passenger and passenger_look == True:
-        state.set_passenger(True)
-        target = state.current_target
-        next_target = [i for i in range(4) if i != target]
-        state.set_target(random.choice(next_target))
-  
-        return 4
-
-    if (rel_x, rel_y) == (0, 0) and state.has_passenger and destination_look == True:
-        state.set_passenger(False)
-        target = state.current_target
-        next_target = [i for i in range(4) if i != target]
-        state.set_target(random.choice(next_target))
-
-        return 5
+    print("Table state:", table_state, policy_table[table_state])
     
-    prob = softmax(policy_table[table_state])
+    if table_state not in policy_table:
+        policy_table[table_state] = np.zeros(4)
+
+    prob = softmax(2 * policy_table[table_state])
     action = np.random.choice(list(range(4)), p=prob)
 
-    if (rel_x, rel_y) == (0, 0):
-        target = state.current_target
-        next_target = [i for i in range(4) if i != target]
-        state.set_target(random.choice(next_target))
-    
+
     return action
