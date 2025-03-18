@@ -18,7 +18,7 @@ def get_action(obs, state=None, policy_table=None, train=False):
 
     scale = 1
     if not train:
-        scale = 2
+        scale = 1
 
     loc = [[0, 0] for i in range(4)]
     taxi_row, taxi_col, loc[0][0], loc[0][1], loc[1][0], loc[1][1], loc[2][0], loc[2][1], loc[3][0], loc[3][1], obstacle_north, obstacle_south, obstacle_east, obstacle_west, passenger_look, destination_look = obs

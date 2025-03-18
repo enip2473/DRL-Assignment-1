@@ -55,7 +55,7 @@ def run_one_episode(env, render=False):
             print(state)
 
     G = 0
-    gamma = 0.1
+    gamma = 0.7
     for t in reversed(range(len(trajectory))):
         state_t, action_t, reward_t = trajectory[t]
         G = reward_t + gamma * G
@@ -64,7 +64,7 @@ def run_one_episode(env, render=False):
     return trajectory, total_reward
 
 
-def update_policy_table(trajectory, alpha = 0.01):
+def update_policy_table(trajectory, alpha = 0.001):
     for state, action, reward in trajectory:
         if action == 4 or action == 5:
             continue
