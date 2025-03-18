@@ -1,6 +1,7 @@
 import numpy as np
 import pickle
 import random
+random.seed(317)
 from utils import State, get_state, convert_to_table_state, softmax, distance
 
 global_state = State()
