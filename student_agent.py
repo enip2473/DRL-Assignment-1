@@ -7,7 +7,7 @@ state = State()
 state.reset()
 
 policy_table = pickle.load(open("policy_table.pkl", "rb"))
-print("Policy table loaded!", policy_table)
+# print("Policy table loaded!", policy_table)
 
 def get_action(obs):
     loc = [[0, 0] for i in range(4)]
@@ -50,7 +50,7 @@ def get_action(obs):
     current_state = get_state(obs, state)
     table_state = convert_to_table_state(current_state)
 
-    print("Table state:", table_state, policy_table[table_state])
+    # print("Table state:", table_state, policy_table[table_state])
     
     if table_state not in policy_table:
         policy_table[table_state] = np.zeros(4)

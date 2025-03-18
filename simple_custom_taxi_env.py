@@ -287,8 +287,8 @@ def run_agent(agent_file, env_config, render=False):
 if __name__ == "__main__":
     env_config = {
         "fuel_limit": 5000,
-        "grid_size": 5,
-        "num_obstacles": 2
+        "grid_size": random.randint(5, 10),
+        "num_obstacles": random.randint(1, 5)
     }
     
     agent_score = run_agent("student_agent.py", env_config, render=True)
