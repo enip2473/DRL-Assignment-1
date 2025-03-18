@@ -52,10 +52,16 @@ def get_action(obs):
 
     if (rel_x, rel_y) == (0, 0) and not state.has_passenger and passenger_look == True:
         state.set_passenger(True)
+        target = state.current_target
+        next_target = [i for i in range(4) if i != target]
+        state.set_target(random.choice(next_target))
         return 4
     
     if (rel_x, rel_y) == (0, 0) and state.has_passenger and destination_look == True:
         state.set_passenger(False)
+        target = state.current_target
+        next_target = [i for i in range(4) if i != target]
+        state.set_target(random.choice(next_target))
         return 5
     
     prob = softmax(policy_table[table_state])
@@ -93,14 +99,14 @@ def run_one_episode(env, render=False):
         current_target = state.current_target
         trajectory.append((prev_state, action, reward))
 
-        extra_reward = -0.05
+        extra_reward = -1
         if prev_target == current_target:
             prev_distance = abs(prev_state[0]) + abs(prev_state[1])
             current_distance = abs(current_state[0]) + abs(current_state[1])
             if current_distance < prev_distance:
-                extra_reward = 0.2
+                extra_reward = 10
             elif current_distance > prev_distance:
-                extra_reward = -0.2
+                extra_reward = -10
         
         reward += extra_reward
 
@@ -119,7 +125,7 @@ def run_one_episode(env, render=False):
     return trajectory, total_reward
 
 
-def update_policy_table(trajectory, alpha = 0.01):
+def update_policy_table(trajectory, alpha = 0.001):
     for state, action, reward in trajectory:
         if action == 4 or action == 5:
             continue
@@ -137,10 +143,11 @@ def update_policy_table(trajectory, alpha = 0.01):
 
 def main(num_episodes=1000, render=False):
     global policy_table
-    env = TaxiEnv(grid_size=5, fuel_limit=500, num_obstacles=2)
+    env = TaxiEnv(grid_size=5, fuel_limit=1000, num_obstacles=2)
     episode_rewards = []
     
     for _ in range(num_episodes):
+        render = _ % 100 == 99
         trajectory, total_reward = run_one_episode(env, render)
         episode_rewards.append(total_reward)
         update_policy_table(trajectory)
