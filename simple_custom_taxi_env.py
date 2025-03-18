@@ -67,7 +67,7 @@ class SimpleTaxiEnv():
         
         if action in [0, 1, 2, 3]:  # Only movement actions should be checked
             if (next_row, next_col) in self.obstacles or not (0 <= next_row < self.grid_size and 0 <= next_col < self.grid_size):
-                reward -=5
+                reward -= 5
             else:
                 self.taxi_pos = (next_row, next_col)
                 if self.passenger_picked_up:
@@ -130,7 +130,7 @@ class SimpleTaxiEnv():
         state = (taxi_row, taxi_col, self.stations[0][0],self.stations[0][1] ,self.stations[1][0],self.stations[1][1],self.stations[2][0],self.stations[2][1],self.stations[3][0],self.stations[3][1],obstacle_north, obstacle_south, obstacle_east, obstacle_west, passenger_look, destination_look)
         return state
    
-    def render_env(self, taxi_pos,   action=None, step=None, fuel=None):
+    def render_env(self, taxi_pos, action=None, step=None, fuel=None):
         clear_output(wait=True)
 
         grid = [['.'] * self.grid_size for _ in range(self.grid_size)]
@@ -175,6 +175,77 @@ class SimpleTaxiEnv():
         """Returns a human-readable action name."""
         actions = ["Move South", "Move North", "Move East", "Move West", "Pick Up", "Drop Off"]
         return actions[action] if action is not None else "None"
+    
+class TaxiEnv(SimpleTaxiEnv):
+    def __init__(self, grid_size=5, fuel_limit=50, num_obstacles=2):
+        super().__init__(grid_size, fuel_limit)
+        self.num_obstacles = num_obstacles
+        
+    def reset(self):
+        self.current_fuel = self.fuel_limit
+        self.passenger_picked_up = False
+
+        available_positions = [
+            (x, y) for x in range(self.grid_size) for y in range(self.grid_size)
+        ]
+
+        self.stations = random.sample(available_positions, 4)
+
+        available_positions = [
+            (x, y) for x in range(self.grid_size) for y in range(self.grid_size)
+            if (x, y) not in self.stations
+        ]
+
+        self.obstacles = set(random.sample(available_positions, self.num_obstacles))
+        
+        available_positions = [
+            (x, y) for x in range(self.grid_size) for y in range(self.grid_size)
+            if (x, y) not in self.stations and (x, y) not in self.obstacles
+        ]
+
+        self.taxi_pos = random.choice(available_positions)
+        self.passenger_loc = random.choice([pos for pos in self.stations])
+        possible_destinations = [s for s in self.stations if s != self.passenger_loc]
+        self.destination = random.choice(possible_destinations)
+        
+        return self.get_state(), {}
+    
+    def render_env(self, taxi_pos, action=None, step=None, fuel=None):
+        clear_output(wait=True)
+
+        grid = [['.'] * self.grid_size for _ in range(self.grid_size)]
+        
+        for obstacle in self.obstacles:
+            oy, ox = obstacle
+            grid[oy][ox] = '⛰️'
+
+        for station in self.stations:
+            sy, sx = station
+            grid[sy][sx] = 'T'
+
+        py, px = self.passenger_loc
+        if 0 <= px < self.grid_size and 0 <= py < self.grid_size:
+            grid[py][px] = '👤'
+
+        dy, dx = self.destination
+        if 0 <= dx < self.grid_size and 0 <= dy < self.grid_size:
+            grid[dy][dx] = 'D'
+                
+        ty, tx = taxi_pos
+        if 0 <= tx < self.grid_size and 0 <= ty < self.grid_size:
+            grid[ty][tx] = '🚖'
+
+        if taxi_pos == self.passenger_loc:
+            grid[ty][tx] = 'O'
+
+        print(f"\nStep: {step}")
+        print(f"Taxi Position: ({tx}, {ty})")
+        print(f"Fuel Left: {fuel}")
+        print(f"Last Action: {self.get_action_name(action)}\n")
+
+        for row in grid:
+            print(" ".join(row))
+        print("\n")
 
 
 def run_agent(agent_file, env_config, render=False):
@@ -182,12 +253,11 @@ def run_agent(agent_file, env_config, render=False):
     student_agent = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(student_agent)
 
-    env = SimpleTaxiEnv(**env_config)
+    env = TaxiEnv(**env_config)
     obs, _ = env.reset()
     total_reward = 0
     done = False
     step_count = 0
-    stations = [(0, 0), (0, 4), (4, 0), (4,4)]
     
     taxi_row, taxi_col, _,_,_,_,_,_,_,_,obstacle_north, obstacle_south, obstacle_east, obstacle_west, passenger_look, destination_look = obs
 
@@ -216,7 +286,9 @@ def run_agent(agent_file, env_config, render=False):
 
 if __name__ == "__main__":
     env_config = {
-        "fuel_limit": 5000
+        "fuel_limit": 5000,
+        "grid_size": 5,
+        "num_obstacles": 2
     }
     
     agent_score = run_agent("student_agent.py", env_config, render=True)
