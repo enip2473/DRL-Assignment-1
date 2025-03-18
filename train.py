@@ -89,7 +89,7 @@ def run_one_episode(env, render=False):
             env.render_env((obs[0], obs[1]), action=action, step=step_count, fuel=env.current_fuel)
 
     G = 0
-    gamma = 0.6
+    gamma = 0.7
     for t in reversed(range(len(trajectory))):
         state_t, action_t, reward_t = trajectory[t]
         G = reward_t + gamma * G
@@ -135,6 +135,6 @@ def main(num_episodes=1000, render=False):
 
 if __name__ == "__main__":
     is_train = True
-    main(num_episodes=10000, render=False)
+    main(num_episodes=50000, render=False)
 
 
